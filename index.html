@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Attendance - (CSE-III YEAR)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #6e7389 0%, #9349de 100%);
+      min-height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      font-size: 2.5em;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 90px);
+      gap: 10px;
+      margin: 20px auto;
+      max-width: 1000px;
+      justify-content: center;
+    }
+    .box {
+      background: linear-gradient(145deg, #e8f5e8, #d4fcd4); /* gradient green = present */
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      cursor: pointer;
+      user-select: none;
+      transition: 0.3s;
+      border: 2px solid #4caf50;
+      font-size: 11px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 90px;
+      width: 90px;
+      line-height: 1.1;
+      box-sizing: border-box;
+      overflow: hidden;
+      word-wrap: break-word;
+      text-overflow: ellipsis;
+    }
+    .absent {
+      background: linear-gradient(145deg, #ffebee, #ffd6d6);
+      border: 2px solid #e04135;
+      box-shadow: 0 4px 8px rgba(244, 67, 54, 0.2);
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: left;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Attendance - (CSE-III YEAR)</h1>
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; max-width: 1200px; margin: 0 auto; gap: 40px;">
+    <div>
+      <div class="grid" id="grid"></div>
+      <div class="grid" id="remainingGrid" style="margin-top: 10px;"></div>
+    </div>
+    <div style="text-align: center; min-width: 300px; margin-left: 20px; background: rgba(255,255,255,0.95); padding: 20px; border-radius: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <script>
+    // 69 names
+    const names = [
+      "AAKASH M", "AARTHIKA P", "AATHISANKAR A", "AISHWARYA R", "AJAYKUMAR KAVITHAMANI RAMANI",
+      "ANCY SNEHA P", "ANGEL V", "ASWINI S", "AYNHARAN S", "CHIDAMBARAM N",
+      "DEVA SRI D", "DEVADHARSAN B", "DHANUSH P", "DHANUSH RAAGAV S", "DHARSINI R",
+      "DHAVAMANI A", "DHILEEPAN T", "DHINAHAR M", "DIVYASRI M", "GLADWIN LEVIS J",
+      "HEMA DHARSHANA S J", "JOSEPH RAJA G", "KABILESH K", "KIRUTHIKA P", "LOKESH R",
+      "MADHU MITHRA A", "MADHURA A", "MAGESH S", "MITHUL V", "MOHAMMED IBRAHIM R",
+      "MOHANARIPRASATH J", "MUHAMMED HASSAN S", "MURUGAVEL N", "NANDHINI R", "NANDHINI V",
+      "NITHISH R", "NIVETHIKA P", "PADMADEV D", "PAVITHRA M", "PRADEEP SA",
+      "PRANEESH P", "PRIYADHARSHINI M", "RAJAGANAPATHI M", "RITHIKA S", "K. RITHIKAA",
+      "A ROSHINI KRITHI", "SANJAYTHARAN S", "SANTHOSH K V", "SANTHOSH KUMAR R", "SATHIYASEELAN S",
+      "SELVA VIKASH P", "SEVANI P P", "SHASHANK M TAREEHAL", "SIBY R", "SIRANJEEVI E",
+      "SIVAGAMI R", "SRIMATHI K", "SUGANYA S", "TULASIRAM V", "S. VARSHITHA",
+      "VIGNESH S", "VIGNESHWARAN M", "KIRUBA SANKARI J", "MURALI PRASANTH C", "NAVIN ANTO SUDHARSON K",
+      "PRASHANNA LAKSHMI S", "RITHANYA R", "SANDEEP KUMAR J", "DHARINEESH S"
+    ];
+
+    const grid = document.getElementById("grid");
+    const remainingGrid = document.getElementById("remainingGrid");
+
+    // Create boxes for first 60 students (10x6 grid)
+    for (let i = 0; i < 60; i++) {
+      const div = document.createElement("div");
+      div.className = "box"; // default: present
+      div.innerHTML = `<div>${names[i]}</div><div>(${i + 1})</div>`;
+      div.onclick = () => {
+        div.classList.toggle("absent"); // toggle between present and absent
+        updateAbsentees(); // automatically update absentees list
+      };
+      grid.appendChild(div);
+    }
+
+    // Create boxes for remaining 9 students with special numbering
+    for (let i = 60; i < 69; i++) {
+      const div = document.createElement("div");
+      div.className = "box"; // default: present
+      let studentNumber;
+      if (i < 63) {
+        studentNumber = i + 1; // 61, 62, 63
+      } else {
+        studentNumber = 301 + (i - 63); // 301, 302, 303, 304, 305, 306
+      }
+      div.innerHTML = `<div>${names[i]}</div><div>(${studentNumber})</div>`;
+      div.onclick = () => {
+        div.classList.toggle("absent"); // toggle between present and absent
+        updateAbsentees(); // automatically update absentees list
+      };
+      remainingGrid.appendChild(div);
+    }
+
+    function updateAbsentees() {
+      const boxes = document.querySelectorAll(".box");
+      const absentees = [];
+      boxes.forEach((box, i) => {
+        if (box.classList.contains("absent")) {
+          let studentNumber;
+          if (i < 60) {
+            studentNumber = i + 1; // Students 1-60
+          } else if (i < 63) {
+            studentNumber = i + 1; // Students 61, 62, 63
+          } else {
+            studentNumber = 301 + (i - 63); // Students 301-306
+          }
+          absentees.push({name: names[i], number: studentNumber});
+        }
+      });
+
+      let html = `<h2>Total Absentees: ${absentees.length}</h2>`;
+      if (absentees.length > 0) {
+        html += "<ul style='text-align: left; padding-left: 20px; list-style: none;'>";
+        absentees.forEach(student => {
+          html += `<li style='display: flex; justify-content: space-between; margin-bottom: 5px; padding: 5px; background: #f8f9fa; border-radius: 4px;'><span>${student.name}</span><span style='color: #666; font-weight: bold;'>(${student.number})</span></li>`;
+        });
+        html += "</ul>";
+      } else {
+        html += "<p style='color: green; font-weight: bold;'>All students are present!</p>";
+      }
+
+      document.getElementById("result").innerHTML = html;
+    }
+
+    // Initialize the absentees display
+    updateAbsentees();
+  </script>
+
+</body>
+</html>
