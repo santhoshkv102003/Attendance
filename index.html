@@ -131,6 +131,29 @@
 
     const STATE_KEY = 'attendance_absent_v1';
 
+    // Special numbering overrides for bottom row
+    const specialNumberByName = {
+      "TULASIRAM V": 60,
+      "S. VARSHITHA": 61,
+      "VIGNESH S": 62,
+      "VIGNESHWARAN M": 63,
+      "KIRUBA SANKARI J": 301,
+      "MURALI PRASANTH C": 302,
+      "NAVIN ANTO SUDHARSON K": 303,
+      "PRASHANNA LAKSHMI S": 304,
+      "RITHANYA R": 305,
+      "SANDEEP KUMAR J": 306,
+      "DHARINEESH S": 70
+    };
+
+    function getNumberForIndex(i) {
+      const name = names[i];
+      if (name in specialNumberByName) return specialNumberByName[name];
+      if (i < 60) return i + 1; // default 1-60
+      if (i < 63) return i + 1; // 61-63 fallback if not in map
+      return 301 + (i - 63);
+    }
+
     const grid = document.getElementById("grid");
     const remainingGrid = document.getElementById("remainingGrid");
 
@@ -156,7 +179,7 @@
     for (let i = 0; i < 60; i++) {
       const div = document.createElement("div");
       div.className = "box"; // default: present
-      div.innerHTML = `<div>${names[i]}</div><div>(${i + 1})</div>`;
+      div.innerHTML = `<div>${names[i]}</div><div>(${getNumberForIndex(i)})</div>`;
       div.onclick = () => {
         div.classList.toggle("absent"); // toggle between present and absent
         saveState();
@@ -169,13 +192,7 @@
     for (let i = 60; i < 69; i++) {
       const div = document.createElement("div");
       div.className = "box"; // default: present
-      let studentNumber;
-      if (i < 63) {
-        studentNumber = i + 1; // 61, 62, 63
-      } else {
-        studentNumber = 301 + (i - 63); // 301, 302, 303, 304, 305, 306
-      }
-      div.innerHTML = `<div>${names[i]}</div><div>(${studentNumber})</div>`;
+      div.innerHTML = `<div>${names[i]}</div><div>(${getNumberForIndex(i)})</div>`;
       div.onclick = () => {
         div.classList.toggle("absent"); // toggle between present and absent
         saveState();
@@ -189,15 +206,7 @@
       const absentees = [];
       boxes.forEach((box, i) => {
         if (box.classList.contains("absent")) {
-          let studentNumber;
-          if (i < 60) {
-            studentNumber = i + 1; // Students 1-60
-          } else if (i < 63) {
-            studentNumber = i + 1; // Students 61, 62, 63
-          } else {
-            studentNumber = 301 + (i - 63); // Students 301-306
-          }
-          absentees.push({name: names[i], number: studentNumber});
+          absentees.push({name: names[i], number: getNumberForIndex(i)});
         }
       });
 
