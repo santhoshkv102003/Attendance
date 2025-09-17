@@ -78,10 +78,27 @@
       margin-left: auto;
       margin-right: auto;
     }
+    .reset-btn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: #ff4757;
+      padding: 12px 22px;
+      font-size: 18px;
+      border-radius: 8px;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+      margin-top: 0;
+    }
+    .reset-btn:hover {
+      background: #e0404e;
+    }
   </style>
 </head>
 <body>
 
+  <button class="reset-btn" onclick="resetPage()">Reset</button>
   <h1>Attendance - (CSE-III YEAR)</h1>
   <div style="display: flex; justify-content: space-between; align-items: flex-start; max-width: 1200px; margin: 0 auto; gap: 20px;">
     <div>
@@ -112,8 +129,28 @@
       "PRASHANNA LAKSHMI S", "RITHANYA R", "SANDEEP KUMAR J", "DHARINEESH S"
     ];
 
+    const STATE_KEY = 'attendance_absent_v1';
+
     const grid = document.getElementById("grid");
     const remainingGrid = document.getElementById("remainingGrid");
+
+    function saveState() {
+      const boxes = document.querySelectorAll('.box');
+      const absentIndices = [];
+      boxes.forEach((box, i) => {
+        if (box.classList.contains('absent')) absentIndices.push(i);
+      });
+      try { localStorage.setItem(STATE_KEY, JSON.stringify(absentIndices)); } catch (_) {}
+    }
+
+    function loadState() {
+      let stored;
+      try { stored = JSON.parse(localStorage.getItem(STATE_KEY) || '[]'); } catch (_) { stored = []; }
+      const boxes = document.querySelectorAll('.box');
+      stored.forEach(i => {
+        if (boxes[i]) boxes[i].classList.add('absent');
+      });
+    }
 
     // Create boxes for first 60 students (10x6 grid)
     for (let i = 0; i < 60; i++) {
@@ -122,6 +159,7 @@
       div.innerHTML = `<div>${names[i]}</div><div>(${i + 1})</div>`;
       div.onclick = () => {
         div.classList.toggle("absent"); // toggle between present and absent
+        saveState();
         updateAbsentees(); // automatically update absentees list
       };
       grid.appendChild(div);
@@ -140,6 +178,7 @@
       div.innerHTML = `<div>${names[i]}</div><div>(${studentNumber})</div>`;
       div.onclick = () => {
         div.classList.toggle("absent"); // toggle between present and absent
+        saveState();
         updateAbsentees(); // automatically update absentees list
       };
       remainingGrid.appendChild(div);
@@ -176,7 +215,13 @@
       document.getElementById("result").innerHTML = html;
     }
 
-    // Initialize the absentees display
+    function resetPage() {
+      try { localStorage.removeItem(STATE_KEY); } catch (_) {}
+      window.location.reload();
+    }
+
+    // Initialize the absentees display from saved state
+    loadState();
     updateAbsentees();
   </script>
 
