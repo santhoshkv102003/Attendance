@@ -94,11 +94,123 @@
     .reset-btn:hover {
       background: #e0404e;
     }
+    .history-btn {
+      position: fixed;
+      top: 10px;
+      left: 120px;
+      background: #28a745;
+      padding: 12px 22px;
+      font-size: 18px;
+      border-radius: 8px;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+      margin-top: 0;
+    }
+    .history-btn:hover {
+      background: #218838;
+    }
+    .save-btn {
+      position: fixed;
+      top: 10px;
+      left: 230px;
+      background: #ffc107;
+      padding: 12px 22px;
+      font-size: 18px;
+      border-radius: 8px;
+      color: #000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+      margin-top: 0;
+    }
+    .save-btn:hover {
+      background: #e0a800;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 800px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover {
+      color: #000;
+    }
+    .history-day {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #007bff;
+    }
+    .history-day h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    .history-absentees {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .history-absentees li {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 10px;
+      margin: 5px 0;
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .no-data {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      padding: 20px;
+    }
+    .clear-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 10px 0;
+      float: right;
+      position: sticky;
+      bottom: 0;
+    }
+    .clear-btn:hover {
+      background: #c82333;
+    }
   </style>
 </head>
 <body>
 
   <button class="reset-btn" onclick="resetPage()">Reset</button>
+  <button class="history-btn" onclick="showHistory()">History</button>
+  <button class="save-btn" onclick="saveDailyAttendance()">Save Today</button>
   <h1>Attendance - (CSE-III YEAR)</h1>
   <div style="display: flex; justify-content: space-between; align-items: flex-start; max-width: 1200px; margin: 0 auto; gap: 20px;">
     <div>
@@ -130,6 +242,7 @@
     ];
 
     const STATE_KEY = 'attendance_absent_v1';
+    const HISTORY_KEY = 'attendance_history_v1';
 
     // Special numbering overrides for bottom row
     const specialNumberByName = {
@@ -157,6 +270,115 @@
     const grid = document.getElementById("grid");
     const remainingGrid = document.getElementById("remainingGrid");
 
+    // History management functions
+    function saveDailyAttendance() {
+      const today = new Date().toDateString();
+      const boxes = document.querySelectorAll('.box');
+      const absentIndices = [];
+      boxes.forEach((box, i) => {
+        if (box.classList.contains('absent')) absentIndices.push(i);
+      });
+      
+      const absentees = absentIndices.map(i => ({
+        name: names[i], 
+        number: getNumberForIndex(i)
+      }));
+
+      let history = [];
+      try { 
+        history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); 
+      } catch (_) { 
+        history = []; 
+      }
+
+      // Remove any existing entry for today
+      history = history.filter(entry => entry.date !== today);
+      
+      // Add today's data with timestamp
+      history.push({
+        date: today,
+        absentees: absentees,
+        totalAbsent: absentees.length,
+        savedAt: new Date().toISOString()
+      });
+
+      // Keep only last 10 days
+      history = history.slice(-10);
+
+      try { 
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); 
+        // Show confirmation
+        alert(`Today's attendance saved! ${absentees.length} absentees recorded.`);
+      } catch (_) {
+        alert('Error saving attendance data.');
+      }
+    }
+
+    function loadHistory() {
+      let history = [];
+      try { 
+        history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); 
+      } catch (_) { 
+        history = []; 
+      }
+      return history;
+    }
+
+    function showHistory() {
+      const history = loadHistory();
+      const modal = document.getElementById('historyModal');
+      const content = document.getElementById('historyContent');
+
+      if (history.length === 0) {
+        content.innerHTML = '<div class="no-data">No attendance history available yet.</div>';
+      } else {
+        let html = '';
+        history.reverse().forEach(day => {
+          const savedAtDisplay = day.savedAt ? new Date(day.savedAt).toLocaleString() : day.date;
+          html += `<div class="history-day">`;
+          html += `<h3>${savedAtDisplay} - ${day.totalAbsent} Absentees</h3>`;
+          if (day.absentees.length > 0) {
+            html += '<ul class="history-absentees">';
+            day.absentees.forEach(student => {
+              html += `<li><span>${student.name}</span><span>(${student.number})</span></li>`;
+            });
+            html += '</ul>';
+          } else {
+            html += '<p style="color: green; font-weight: bold;">All students were present!</p>';
+          }
+          html += '</div>';
+        });
+        html += '<button class="clear-btn" onclick="clearHistory()">Clear All History</button>';
+        content.innerHTML = html;
+      }
+
+      modal.style.display = 'block';
+    }
+
+    function closeHistory() {
+      document.getElementById('historyModal').style.display = 'none';
+    }
+
+    function clearHistory() {
+      if (confirm('Are you sure you want to clear all attendance history? This action cannot be undone.')) {
+        try {
+          localStorage.removeItem(HISTORY_KEY);
+          alert('All attendance history has been cleared successfully!');
+          closeHistory();
+        } catch (_) {
+          alert('Error clearing history data.');
+        }
+      }
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+      const modal = document.getElementById('historyModal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    }
+
     function saveState() {
       const boxes = document.querySelectorAll('.box');
       const absentIndices = [];
@@ -164,6 +386,7 @@
         if (box.classList.contains('absent')) absentIndices.push(i);
       });
       try { localStorage.setItem(STATE_KEY, JSON.stringify(absentIndices)); } catch (_) {}
+      // Note: Daily history is only saved when "Save Today" button is clicked
     }
 
     function loadState() {
@@ -233,6 +456,15 @@
     loadState();
     updateAbsentees();
   </script>
+
+  <!-- History Modal -->
+  <div id="historyModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeHistory()">&times;</span>
+      <h2>Past 10 Days Absentees History</h2>
+      <div id="historyContent"></div>
+    </div>
+  </div>
 
 </body>
 </html>
