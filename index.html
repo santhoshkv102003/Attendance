@@ -94,6 +94,36 @@
     .reset-btn:hover {
       background: #e0404e;
     }
+    .save-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #28a745;
+      padding: 12px 22px;
+      font-size: 18px;
+      border-radius: 8px;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+      margin-top: 0;
+    }
+    .mark-all-absent-btn {
+      position: fixed;
+      top: 10px;
+      right: 150px;
+      background: #ff6b6b;
+      padding: 12px 22px;
+      font-size: 18px;
+      border-radius: 8px;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+      margin-top: 0;
+      transition: background 0.3s;
+    }
+    .mark-all-absent-btn:hover {
+      background: #ff4757;
+    }
     .history-btn {
       position: fixed;
       top: 10px;
@@ -109,22 +139,6 @@
     }
     .history-btn:hover {
       background: #218838;
-    }
-    .save-btn {
-      position: fixed;
-      top: 10px;
-      left: 230px;
-      background: #ffc107;
-      padding: 12px 22px;
-      font-size: 18px;
-      border-radius: 8px;
-      color: #000;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 1000;
-      margin-top: 0;
-    }
-    .save-btn:hover {
-      background: #e0a800;
     }
     .modal {
       display: none;
@@ -211,6 +225,7 @@
   <button class="reset-btn" onclick="resetPage()">Reset</button>
   <button class="history-btn" onclick="showHistory()">History</button>
   <button class="save-btn" onclick="saveDailyAttendance()">Save Today</button>
+  <button class="mark-all-absent-btn" onclick="markAllAbsent()">Mark All Absent</button>
   <h1>Attendance - (CSE-III YEAR)</h1>
   <div style="display: flex; justify-content: space-between; align-items: flex-start; max-width: 1200px; margin: 0 auto; gap: 20px;">
     <div>
@@ -396,6 +411,15 @@
       stored.forEach(i => {
         if (boxes[i]) boxes[i].classList.add('absent');
       });
+    }
+
+    function markAllAbsent() {
+      const boxes = document.querySelectorAll('.box');
+      boxes.forEach(box => {
+        box.classList.add('absent');
+      });
+      updateAbsentees();
+      saveState();
     }
 
     // Create boxes for first 60 students (10x6 grid)
